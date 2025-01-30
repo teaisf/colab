@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Check if a file is provided as an argument
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <file_with_urls>"
+    exit 1
+fi
+
+# Input file containing URLs
+URL_FILE=$1
+
+# Check if the input file exists
+if [ ! -f "$URL_FILE" ]; then
+    echo "Error: File $URL_FILE does not exist."
+    exit 1
+fi
+
+# Create necessary directories
+COMPRESSED_DIR="/content/drive/MyDrive/compressed"
+mkdir -p "$COMPRESSED_DIR"
+
+# Process each URL from the file
+while IFS= read -r URL; do
+    if [[ -n "$URL" ]]; then
+        # Extract the filename from the URL
+        RAW_FILENAME=$(basename "$URL")
+        FILENAME=$(python3 -c "import urllib.parse; print(urllib.parse.unquote('$RAW_FILENAME'))")
+
+        # Download the file to the compressed folder
+        echo "Downloading $URL..."
+        curl -L "$URL" -o "$COMPRESSED_DIR/$FILENAME"
+    fi
+done < "$URL_FILE"
+
+echo "Processing complete."
+exit 0

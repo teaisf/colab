@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+
+import os, glob
+import subprocess
+import shutil
+import re
+import zipfile
+from pathlib import Path
+from datetime import datetime, timezone
+
+max_chunk_sum = 2048 * 1024 * 1024
+dtstr = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+
+def compress_file(c, ipth, opth):
+    root_directory = Path(c)
+    lst = [(f.stat().st_size, str(f.resolve())) for f in root_directory.glob('**/*') if f.is_file()]
+    print(lst)
+    result = [[]]
+    cur = 0
+    for item in lst:
+        d = item[1]
+        if cur + item[0] > max_chunk_sum:
+            result.append([d])
+            cur = 0
+        else:
+            result[-1].append(d)
+            cur = cur + item[0]
+    for i,e in enumerate(result):
+        archn = os.path.join(opth, os.path.basename(os.path.normpath(c)) + "-" + dtstr + str(i+1).zfill(2) + ".zip")
+        print(archn)
+        with zipfile.ZipFile(archn, 'w', zipfile.ZIP_STORED) as zipf:
+            for file in e:
+                zipf.write(file, file.replace(ipth, ''))
+                with open(file, 'w'): pass
+                os.remove(file)
+    shutil.rmtree(c, ignore_errors=True)
+
+def compress_files():
+    path = "/content/drive/MyDrive"
+#    path = os.getcwd()
+    ipth = os.path.join(path, 'extracted')
+    opth = os.path.join(path, 'compressed')
+    files = glob.glob(ipth + "/*/")
+    for c in files:
+        compress_file(c, ipth, opth)
+
+compress_files()
