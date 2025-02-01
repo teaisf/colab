@@ -24,7 +24,7 @@ else:
                 # Check if folder is empty and created in the last 24 hours
                 if not any(folder.iterdir()) and creation_time == 0:
                     print(f"Deleting empty folder: {folder}")
-                    # os.rmdir(folder)
+                    os.rmdir(folder)
             except Exception as e:
                 print(f"Error processing {folder}: {e}")
 
