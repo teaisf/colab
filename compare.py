@@ -51,4 +51,4 @@ elif not os.path.exists(output_directory):
     print(f"Error: Directory '{output_directory}' does not exist.")
 else:
     # Get a list of all items in the directory
-    compare_folders(input_directory)
+    compare_folders(input_directory, output_directory)
