@@ -30,7 +30,8 @@ sparams = {
 
 def resol(r):
     return {
-        "b:v": f"{r}k", "maxrate": f"{r}k", "bufsize": f"{int(r/2)}k"
+        "b:v": f"{r}k", "maxrate": f"{r}k", "bufsize": f"{int(r/2)}k",
+        "b:a": f"{round(r/30*2)}k", "ar": f"{r}00"
     }
 
 profiles = {
