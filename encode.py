@@ -33,6 +33,7 @@ sformats = sformats | {x.upper() for x in sformats}
 valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 prof = profiles[args.p or "720"]
+print(prof)
 start = int(args.s or 0)
 
 
