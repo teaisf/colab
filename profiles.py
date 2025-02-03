@@ -54,6 +54,11 @@ profiles = {
         "params": {**params, **resol(720)},
         "iparams": {}
     },
+    "1080": {
+        "scale": ("scale", -2, 1080),
+        "params": {**params, **resol(1080)},
+        "iparams": {}
+    },
     "copy": {
         "scale": ("scale", -1, -1),
         "params": sparams,
@@ -77,6 +82,11 @@ profiles = {
     "g720": {
         "scale": ("scale_cuda", -2, 720),
         "params": {**gparams, **resol(720)},
+        "iparams": iparams
+    },
+    "g1080": {
+        "scale": ("scale_cuda", -2, 1080),
+        "params": {**gparams, **resol(1080)},
         "iparams": iparams
     }
 }
