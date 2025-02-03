@@ -7,7 +7,7 @@ params = {
     "preset": "veryfast", "crf": "27", "movflags": "faststart",
     "map_metadata":"-1", "strict": "-2","scodec": 'mov_text', "disposition:s:0": "forced", 
     "vcodec": "libx264", "video_track_timescale": "15360",
-    "acodec": "libopus", "ac": "1", "ar": "48000", "b:a": "32k",
+    "acodec": "libopus", "ac": "1", "ar": "48000", "b:a": "48k",
 }
 
 gparams = {
