@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Define variables
+INPUT_DIR="./input" # Directory containing the multi-part archive
+OUTPUT_DIR="./output"
+
+# # Check if the first part's name is passed as an argument
+# if [[ -z "$1" ]]; then
+#     echo "Error: Please provide the first part's name as a terminal argument."
+#     echo "Usage: $0 archive.part01.rar"
+#     exit 1
+# fi
+
+# FIRST_PART="$INPUT_DIR/$1"
+
+# # Check if the first part exists
+# if [[ ! -f "$FIRST_PART" ]]; then
+#     echo "Error: First part ($FIRST_PART) not found in $INPUT_DIR. Exiting."
+#     exit 1
+# fi
+
+# Search for the first part file automatically
+FIRST_PART=$(find "$INPUT_DIR" -type f -iname "*part01*" | head -n 1)
+
+# If no part01 is found, search for part1
+if [[ -z "$FIRST_PART" ]]; then
+    FIRST_PART=$(find "$INPUT_DIR" -type f -iname "*part1*" | head -n 1)
+fi
+
+# Check if a first part was found
+if [[ -z "$FIRST_PART" ]]; then
+    echo "Error: No archive part01 or part1 found in $INPUT_DIR. Exiting."
+    exit 1
+fi
+
+echo "Found first part: $FIRST_PART"
+
+# Create output directory if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
+
+# Extract the archive and delete parts sequentially
+while IFS= read -r line; do
+    # Parse the part file being processed
+    if [[ $line =~ Extracting\ from\ ([^[:space:]]+) ]]; then
+        PART_NAME=$(basename "${BASH_REMATCH[1]}")
+        CURRENT_PART="$INPUT_DIR/$PART_NAME"
+        echo "Processing $CURRENT_PART..."
+
+        # Wait until unrar moves to the next part to delete the current one
+        if [[ -f "$CURRENT_PART" ]]; then
+            echo "Deleting $CURRENT_PART..."
+            rm -f "$CURRENT_PART"
+        fi
+    fi
+done < <(unrar x -idp "$FIRST_PART" "$OUTPUT_DIR/")
+
+if [[ $? -ne 0 ]]; then
+    echo "Error extracting the archive. Exiting."
+    exit 1
+fi
+
+echo "Extraction complete! All parts have been processed and deleted."
