@@ -4,6 +4,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ipth', nargs='?')
+parser.add_argument('-e')
 
 args = parser.parse_args()
 
