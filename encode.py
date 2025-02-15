@@ -1,6 +1,7 @@
 import glob
 import os
 import shutil
+import time
 import ffmpeg
 import string
 import argparse
@@ -32,8 +33,18 @@ sformats = {".srt", ".vtt"}
 sformats = sformats | {x.upper() for x in sformats}
 valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
+excluded = []
+processed = []
+
 prof = profiles[args.p or "720"]
 start = int(args.s or 0)
+
+
+def sanitize(path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tup = os.path.basename(path)
+    s = "".join(x for x in tup if x in valid_chars)
+    return os.path.join(os.path.dirname(path), s)
 
 
 def handle_move(ipath, opath):
@@ -65,14 +76,19 @@ def handle_delete(pth, isdir=False):
             shutil.move(pth, outpath, copy_function=shutil.copy2)
 
 
+def process_err(fil):
+    outpath = str(fil).replace(ipth, opth)
+    outpath = sanitize(outpath)
+    shutil.move(fil, outpath, copy_function=shutil.copy2)
+
+
 def err_hdl(fil):
     try:
         w = ffmpeg.probe(fil, cmd='ffprobe')
         z = w['format']['bit_rate']
         print(fil, w, z)
     except Exception as e:
-        outpath = str(fil).replace(ipth, epth)
-        shutil.move(fil, outpath, copy_function=shutil.copy2)
+        process_err(fil)
         raise
 
 
@@ -105,14 +121,14 @@ def size_dir(path):
 
 def list_dir(path):
     files = glob.glob(path + "/*/")
-    k = lambda t: size_dir(t)
+    def k(t): return size_dir(t)
     r = True
     if opts["list_dir"] == "modified":
-        k = lambda t: t.stat().st_mtime
+        def k(t): return t.stat().st_mtime
     elif opts["list_dir"] == "bitrate":
-        k = lambda t: bitrate_dir(t)
+        def k(t): return bitrate_dir(t)
     elif opts["list_dir"] == "filesize":
-        k = lambda t: filesize_dir(t)
+        def k(t): return filesize_dir(t)
     return sorted(files, key=k, reverse=r)
 
 
@@ -123,13 +139,6 @@ def list_files(path):
     print(files)
     files = [*set(files)]
     return natsorted(files)
-
-
-def sanitize(path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tup = os.path.basename(path)
-    s = "".join(x for x in tup if x in valid_chars)
-    return os.path.join(os.path.dirname(path), s)
 
 
 def hasStream(video, audio, subtitle):
@@ -175,14 +184,14 @@ def get_subs(input):
         (file for file in subtitle_files if pattern.search(file.name)),
         key=lambda x: x.name.lower()  # Sort by filename to ensure consistent selection
     )
-    if(len(subtitles) == 1):
+    if (len(subtitles) == 1):
         english_subtitles = subtitles
     else:
         english_subtitles = sorted(
             (file for file in subtitles if enpattern.search(file.name)),
             key=lambda x: x.name.lower()  # Sort by filename to ensure consistent selection
         )
-        if(len(english_subtitles) == 0):
+        if (len(english_subtitles) == 0):
             english_subtitles = subtitles
     try:
         print("XXXXXXXXXXXXXXXSUBTITLEXXXXXXXXXXXXXXX", english_subtitles)
@@ -204,7 +213,7 @@ def get_streams(input):
         if video is None:
             video = istream.video.filter(*prof["scale"])
     try:
-        for i,v in enumerate(audios):
+        for i, v in enumerate(audios):
             if audio is None and v['tags'].get('language') == 'eng':
                 audio = istream[f'a:{i}']
             if hindi is None and (v['tags'].get('language') == 'hin' or v['tags'].get('language') is None):
@@ -212,24 +221,24 @@ def get_streams(input):
             if audio is None:
                 audio = istream[f'a:{i}']
     except:
-        for i,v in enumerate(audios):
+        for i, v in enumerate(audios):
             if audio is None:
                 audio = istream[f'a:{i}']
     try:
-        for i,v in enumerate(subtitles):
+        for i, v in enumerate(subtitles):
             if subtitle is None and v['tags'].get('language') == 'eng' and v['disposition']['forced'] != 1:
                 subtitle = istream[f's:{i}']
     except:
-        for i,v in enumerate(subtitles):
+        for i, v in enumerate(subtitles):
             if subtitle is None:
                 subtitle = istream[f's:{i}']
-                
+
     if subtitle is None:
         subtitle = sstream
 
     hasStream(video, audio, subtitle)
 
-    return list(filter(None,[video, audio, subtitle, hindi]))
+    return list(filter(None, [video, audio, subtitle, hindi]))
 
 
 def process_encode(input, output):
@@ -245,7 +254,7 @@ def process_encode(input, output):
         z = e.stderr.decode('utf8')
         if z:
             print('stderr:', z)
-            raise z
+            process_err(input)
 
 
 def encode_func(lst, lth):
@@ -270,7 +279,8 @@ def encode_func(lst, lth):
             process_encode(val, outpath)
             before = Path(val).stat().st_size
             after = Path(outpath).stat().st_size
-            print(before, '=>' , after, '=>', before - after, '=>', after / before * 100, "%", datetime.now() - startenc)
+            print(before, '=>', after, '=>', before - after, '=>',
+                  after / before * 100, "%", datetime.now() - startenc)
             with open(val, 'w'):
                 pass
             handle_delete(val)
@@ -289,6 +299,7 @@ def encode_func(lst, lth):
 
 
 def encode_del(path):
+    cycle = 0
     current_time = datetime.now().timestamp()
     os.utime(path, (current_time, current_time))
     lst = list_files(path)
@@ -296,17 +307,28 @@ def encode_del(path):
     while lth > 0:
         encode_func(lst, lth)
         lst = list_files(path)
+        if (cycle >= 5):
+            for fil in lst:
+                process_err(fil)
+        else:
+            cycle = cycle + 1
         lth = len(lst)
     handle_delete(path, True)
 
 
 def process():
     dirs = list_dir(ipth)
+    dirs = [item for item in dirs if item not in excluded]
     if (len(dirs) <= 0):
         print("FINISHED!!!!!")
         return
     workdir = dirs[0]
     encode_del(workdir)
+    if processed.count(workdir):
+        excluded.append(workdir)
+        print(f"{workdir} has been excluded from the list. erred:\n", erred)
+    else:
+        processed.append(workdir)
     process()
 
 
