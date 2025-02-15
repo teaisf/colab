@@ -83,8 +83,6 @@ def process_err(fil):
 
 
 def err_hdl(fil):
-    if not os.path.exists(fil):
-        raise
     try:
         w = ffmpeg.probe(fil, cmd='ffprobe')
         z = w['format']['bit_rate']
@@ -197,7 +195,9 @@ def get_subs(input):
             english_subtitles = subtitles
     try:
         print("XXXXXXXXXXXXXXXSUBTITLEXXXXXXXXXXXXXXX", english_subtitles)
-        sstream = ffmpeg.input(str(english_subtitles[0]))
+        fil = str(english_subtitles[0])
+        w = ffmpeg.probe(fil, cmd='ffprobe')
+        sstream = ffmpeg.input(fil)
         return sstream
     except:
         return None
@@ -279,6 +279,8 @@ def encode_func(lst, lth):
             outpath = sanitize(outpath)
             startenc = datetime.now()
             process_encode(val, outpath)
+            if not os.path.exists(val):
+                continue
             before = Path(val).stat().st_size
             after = Path(outpath).stat().st_size
             print(before, '=>', after, '=>', before - after, '=>',
