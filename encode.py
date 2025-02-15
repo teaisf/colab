@@ -83,6 +83,8 @@ def process_err(fil):
 
 
 def err_hdl(fil):
+    if not os.path.exists(fil):
+        raise
     try:
         w = ffmpeg.probe(fil, cmd='ffprobe')
         z = w['format']['bit_rate']
