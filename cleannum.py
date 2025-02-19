@@ -20,6 +20,10 @@ else:
         filepath = os.path.join(directory, filename)
     
         # Check if it's a file, begins with a number, and has a size of 0 bytes
-        if os.path.isfile(filepath) and filename[0].isdigit() and os.path.getsize(filepath) == 0:
-            os.remove(filepath)  # Delete the file
-            print(f"Deleted: {filepath}")
+        if filename[0].isdigit() and os.path.getsize(filepath) == 0:
+            if os.path.isdir(filename):
+                shutil.rmtree(filepath)  # Delete the file
+                print(f"Deleted: {filepath}")
+            else:
+                os.remove(filepath)  # Delete the file
+                print(f"Deleted: {filepath}")
