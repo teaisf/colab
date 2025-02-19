@@ -18,14 +18,12 @@ else:
     # Iterate over all files in the directory
     for filename in os.listdir(directory):
         filepath = os.path.join(directory, filename)
-        print(filename)
-    
         # Check if it's a file, begins with a number, and has a size of 0 bytes
-        if os.path.isfile(filename) and filename[0].isdigit() and os.path.getsize(filepath) == 0:
+        if os.path.isfile(filepath) and filename[0].isdigit() and os.path.getsize(filepath) == 0:
             print(os.stat(filepath))
             os.remove(filepath)  # Delete the file
             print(f"Deleted: {filepath}")
-        if os.path.isdir(filename) and filename[0].isdigit():
+        if os.path.isdir(filepath) and filename[0].isdigit():
             print(os.stat(filepath))
             shutil.rmtree(filepath)  # Delete the file
             print(f"Deleted: {filepath}")
