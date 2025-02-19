@@ -18,6 +18,7 @@ else:
     # Iterate over all files in the directory
     for filename in os.listdir(directory):
         filepath = os.path.join(directory, filename)
+        print(filepath)
     
         # Check if it's a file, begins with a number, and has a size of 0 bytes
         if os.path.isfile(filename) and filename[0].isdigit() and os.path.getsize(filepath) == 0:
