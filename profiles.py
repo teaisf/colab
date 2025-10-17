@@ -6,7 +6,7 @@ opts = {
 params = {
     "preset": "veryfast", "crf": "27", "movflags": "faststart",
     "map_metadata":"-1", "strict": "-2","scodec": 'mov_text', "disposition:s:0": "forced", 
-    "vcodec": "libx264", "video_track_timescale": "15360",
+    "vcodec": "libx265", "video_track_timescale": "15360",
     "acodec": "libopus", "ac": "1", "ar": "48000", "b:a": "48k",
 }
 
@@ -16,6 +16,14 @@ gparams = {
     "acodec": "libopus", "ac": "1", "ar": "48000", "b:a": "32k",
     "scodec": 'mov_text', "disposition:s:0": "forced", "tune":'hq',
     "cq:v": '36', "rc:v": "vbr", 'temporal-aq': 1, 'spatial-aq': 1
+}
+
+tgparams = {
+    "vcodec": 'h264_nvenc', "acodec": "aac", "b:a": "128k"
+}
+
+tparams = {
+    "vcodec": "libx264", "acodec": "aac", "b:a": "128k"
 }
 
 iparams = {
@@ -50,9 +58,19 @@ profiles = {
         "params": {**params, **resol(540)},
         "iparams": {}
     },
+    "540t": {
+        "scale": ("scale", -2, 540),
+        "params": {**params, **tparams, **resol(540)},
+        "iparams": {}
+    },
     "720": {
         "scale": ("scale", -2, 720),
         "params": {**params, **resol(720)},
+        "iparams": {}
+    },
+    "720t": {
+        "scale": ("scale", -2, 720),
+        "params": {**params, **tparams, **resol(720)},
         "iparams": {}
     },
     "1080": {
@@ -80,9 +98,19 @@ profiles = {
         "params": {**gparams, **resol(540)},
         "iparams": iparams
     },
+    "g540t": {
+        "scale": ("scale_cuda", -2, 540),
+        "params": {**gparams, **tgparams, **resol(540)},
+        "iparams": iparams
+    },
     "g720": {
         "scale": ("scale_cuda", -2, 720),
         "params": {**gparams, **resol(720)},
+        "iparams": iparams
+    },
+    "g720t": {
+        "scale": ("scale_cuda", -2, 720),
+        "params": {**gparams, **tgparams, **resol(720)},
         "iparams": iparams
     },
     "g1080": {
